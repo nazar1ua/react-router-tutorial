@@ -1,8 +1,26 @@
-import { Form, LoaderFunction, useLoaderData } from 'react-router-dom'
-import { ContactType, getContact } from '../contacts'
+import {
+   useLoaderData,
+   Form,
+   useFetcher,
+} from 'react-router-dom'
+import { ContactType, getContact, updateContact } from '../contacts'
 
 export async function loader({ params }: any) {
-   return getContact(params.contactId)
+   const contact = await getContact(params.contactId)
+   if (!contact) {
+      throw new Response('', {
+         status: 404,
+         statusText: 'Not Found',
+      })
+   }
+   return contact
+}
+
+export async function action({ request, params }: any) {
+   let formData = await request.formData()
+   return updateContact(params.contactId, {
+      favorite: formData.get('favorite') === 'true',
+   })
 }
 
 export default function Contact() {
@@ -68,22 +86,27 @@ export default function Contact() {
 }
 
 function Favorite({ contact }: { contact: ContactType }) {
-   // yes, this is a `let` for later
+   const fetcher = useFetcher()
+
    let favorite = contact.favorite
+   if (fetcher.formData) {
+      favorite = fetcher.formData.get("favorite") === 'true'
+   }
+
 
    return (
-     <Form method="post">
-       <button
-         name="favorite"
-         value={favorite ? "false" : "true"}
-         aria-label={
-           favorite
-             ? "Видалити з улюблених"
-             : "Додати в улюблені"
-         }
-       >
-         {favorite ? "★" : "☆"}
-       </button>
-     </Form>
+      <fetcher.Form method="post">
+         <button
+            name="favorite"
+            value={favorite ? "false" : "true"}
+            aria-label={
+               favorite
+                  ? "Видалити з улюблених"
+                  : "Додати в улюблені"
+            }
+         >
+            {favorite ? "★" : "☆"}
+         </button>
+      </fetcher.Form>
    );
- }
+}
