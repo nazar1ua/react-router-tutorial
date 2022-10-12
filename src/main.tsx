@@ -30,7 +30,7 @@ import Index from './routes'
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: import.meta.env.BASE_URL,
     element: <Root />,
     errorElement: <ErrorPage />,
     loader: rootLoader,
